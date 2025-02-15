@@ -4,7 +4,8 @@ import bcrypt from "bcryptjs";
 import cloudinary from "../lib/cloudinary.js";
 
 export const signup = async (req, res) => {
-  const { fullName, email, password } = req.body;
+  const { fullName, email, password, profilePic } = req.body;
+
   try {
     if (!fullName || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
@@ -14,9 +15,11 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
-    const user = await User.findOne({ email });
+    const userExists = await User.findOne({ email });
 
-    if (user) return res.status(400).json({ message: "Email already exists" });
+    if (userExists) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -25,27 +28,27 @@ export const signup = async (req, res) => {
       fullName,
       email,
       password: hashedPassword,
+      profilePic: profilePic || "", // Save profilePic if provided, otherwise empty string
     });
 
-    if (newUser) {
-      // generate jwt token here
-      generateToken(newUser._id, res);
-      await newUser.save();
+    await newUser.save();
 
-      res.status(201).json({
-        _id: newUser._id,
-        fullName: newUser.fullName,
-        email: newUser.email,
-        profilePic: newUser.profilePic,
-      });
-    } else {
-      res.status(400).json({ message: "Invalid user data" });
-    }
+    // Generate JWT token
+    generateToken(newUser._id, res);
+
+    res.status(201).json({
+      _id: newUser._id,
+      fullName: newUser.fullName,
+      email: newUser.email,
+      profilePic: newUser.profilePic, // Return profilePic in response
+    });
+
   } catch (error) {
-    console.log("Error in signup controller", error.message);
+    console.error("Error in signup controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
@@ -116,3 +119,4 @@ export const checkAuth = (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+

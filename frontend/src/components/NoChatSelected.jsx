@@ -1,6 +1,11 @@
 import { MessageSquare } from "lucide-react";
+import { useAuthStore } from "../store/useAuthStore";
 
 const NoChatSelected = () => {
+
+  const { authUser} = useAuthStore();
+
+
   return (
     <div className="w-full flex flex-1 flex-col items-center justify-center p-16 bg-base-100/50">
       <div className="max-w-md text-center space-y-6">
@@ -17,7 +22,7 @@ const NoChatSelected = () => {
         </div>
 
         {/* Welcome Text */}
-        <h2 className="text-2xl font-bold">Welcome to Chatty!</h2>
+        <h2 className="text-2xl font-bold">Hello {authUser?.fullName}! Welcome to Priyanshu's Chit Chat!</h2>
         <p className="text-base-content/60">
           Select a conversation from the sidebar to start chatting
         </p>
